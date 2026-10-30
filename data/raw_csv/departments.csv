@@ -1,0 +1,8 @@
+department_id,department_name,division,cost_center,headcount_budget
+1,Engineering,Technology,CC-101,420
+2,Sales,Commercial,CC-102,240
+3,Product & Design,Technology,CC-103,130
+4,Marketing,Commercial,CC-104,120
+5,Customer Support,Operations,CC-105,180
+6,Human Resources,Corporate,CC-106,60
+7,Finance & Legal,Corporate,CC-107,70

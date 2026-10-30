@@ -1,0 +1,87 @@
+```mermaid
+erDiagram
+    DEPARTMENTS ||--o{ EMPLOYEES : "employs"
+    DEPARTMENTS ||--o{ JOB_ROLES : "defines"
+    LOCATIONS ||--o{ EMPLOYEES : "stations"
+    JOB_ROLES ||--o{ EMPLOYEES : "classifies"
+    EMPLOYEES ||--o{ EMPLOYEES : "manages"
+    EMPLOYEES ||--o{ PERFORMANCE_REVIEWS : "receives"
+    EMPLOYEES ||--o{ SALARY_HISTORY : "tracks"
+
+    DEPARTMENTS {
+        int department_id PK
+        string department_name
+        string division
+        string cost_center UK
+        int headcount_budget
+    }
+
+    LOCATIONS {
+        int location_id PK
+        string city
+        string state_province
+        string country
+        string region
+        decimal cost_of_living_index
+        string office_type
+    }
+
+    JOB_ROLES {
+        int job_id PK
+        string job_title
+        int department_id FK
+        string job_level
+        decimal salary_band_min
+        decimal salary_band_mid
+        decimal salary_band_max
+    }
+
+    EMPLOYEES {
+        int employee_id PK
+        string first_name
+        string last_name
+        string email UK
+        string gender
+        date birth_date
+        string education_level
+        date hire_date
+        date exit_date
+        string employment_status
+        string termination_type
+        string termination_reason
+        int department_id FK
+        int job_id FK
+        int manager_id FK
+        int location_id FK
+        decimal base_salary
+        decimal compa_ratio
+        int performance_rating
+        int satisfaction_score
+        int work_life_balance_score
+        int monthly_overtime_hours
+        int remote_ratio_pct
+        int promotions_count
+        date last_promotion_date
+        decimal tenure_years
+    }
+
+    PERFORMANCE_REVIEWS {
+        int review_id PK
+        int employee_id FK
+        int review_year
+        date review_date
+        int rating
+        int goals_met_pct
+        string potential_rating
+    }
+
+    SALARY_HISTORY {
+        int history_id PK
+        int employee_id FK
+        date effective_date
+        decimal previous_salary
+        decimal new_salary
+        decimal salary_change_pct
+        string change_reason
+    }
+```

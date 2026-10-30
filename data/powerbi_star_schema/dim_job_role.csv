@@ -1,0 +1,27 @@
+job_id,job_title,department_id,job_level,salary_band_min,salary_band_mid,salary_band_max
+1,Associate Software Engineer,1,L1,75000,90000,105000
+2,Software Engineer,1,L2,100000,120000,140000
+3,Senior Software Engineer,1,L3,135000,155000,180000
+4,Staff Software Engineer,1,L4,175000,200000,230000
+5,Engineering Manager,1,M1,180000,210000,245000
+6,Director of Engineering,1,M2,230000,265000,310000
+7,Sales Development Rep (SDR),2,L1,50000,60000,72000
+8,Account Executive,2,L2,75000,92000,115000
+9,Senior Enterprise AE,2,L3,110000,135000,165000
+10,Sales Manager,2,M1,140000,165000,195000
+11,VP of Sales,2,E1,240000,280000,330000
+12,Associate Product Designer,3,L1,70000,82000,95000
+13,Product Designer,3,L2,95000,112000,130000
+14,Product Manager,3,L3,125000,145000,170000
+15,Director of Product,3,M2,210000,245000,285000
+16,Marketing Specialist,4,L1,55000,65000,78000
+17,Senior Growth Marketer,4,L3,95000,115000,135000
+18,Marketing Director,4,M2,175000,205000,240000
+19,Support Specialist,5,L1,42000,50000,60000
+20,Senior Support Specialist,5,L2,55000,66000,78000
+21,Support Operations Manager,5,M1,90000,110000,130000
+22,HR Generalist,6,L2,65000,78000,92000
+23,People Operations Manager,6,M1,115000,135000,160000
+24,Financial Analyst,7,L2,75000,88000,105000
+25,Finance Director,7,M2,190000,225000,265000
+26,Chief Executive Officer (CEO),7,E1,350000,450000,550000

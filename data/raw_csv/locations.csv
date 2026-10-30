@@ -1,0 +1,7 @@
+location_id,city,state_province,country,region,cost_of_living_index,office_type
+1,New York,NY,USA,North America,1.35,Regional HQ
+2,San Francisco,CA,USA,North America,1.45,Corporate HQ
+3,Austin,TX,USA,North America,1.05,Tech Hub
+4,Chicago,IL,USA,North America,1.15,Branch Office
+5,London,Greater London,UK,EMEA,1.3,International HQ
+6,Remote Hub,Nationwide,USA,Distributed,1.0,Virtual

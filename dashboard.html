@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HR Analytics & Workforce Intelligence Dashboard</title>
+  <script src="https://cdn.tailwindcss.com">
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const targetTab = hash.substring(1);
+        if (document.getElementById(targetTab)) {
+          switchTab(targetTab);
+        }
+      }
+    });
+
+  </script>
+  <style>
+    /* Custom scrollbars and transitions */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--background, #0f172a); }
+    ::-webkit-scrollbar-thumb { background: var(--border, #334155); border-radius: 3px; }
+    .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; font-weight: 600; }
+    .badge-critical { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-high { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-moderate { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-healthy { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+  </style>
+</head>
+<body class="bg-[var(--background,#0b0f19)] text-[var(--foreground,#f8fafc)] antialiased min-h-screen p-4 md:p-6 font-sans">
+
+  <!-- TOP HEADER -->
+  <header class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-2xl p-5 mb-6 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-blue-600/20 text-blue-500 font-bold text-lg">HR</span>
+          <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[var(--foreground,#f8fafc)]">Workforce & Retention Analytics</h1>
+          <span class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">FY2024 Final</span>
+        </div>
+        <p class="text-xs md:text-sm text-[var(--muted-foreground,#94a3b8)] mt-1">
+          End-to-end executive diagnostic tracking headcount dynamics, compa-ratio flight risk, and retention ROI across 1,250 employee records.
+        </p>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-[var(--muted-foreground,#94a3b8)] font-semibold mb-1">Department</label>
+          <select id="deptFilter" onchange="applyFilters()" class="bg-[var(--background,#0b0f19)] border border-[var(--border,#1f2937)] text-[var(--foreground,#f8fafc)] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <option value="All">All Departments (7)</option>
+            <option value="Engineering">Engineering (338 Active)</option>
+            <option value="Sales">Sales (177 Active)</option>
+            <option value="Customer Support">Customer Support (98 Active)</option>
+            <option value="Product & Design">Product & Design (82 Active)</option>
+            <option value="Marketing">Marketing (78 Active)</option>
+            <option value="Finance & Legal">Finance & Legal (54 Active)</option>
+            <option value="Human Resources">Human Resources (45 Active)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-[var(--muted-foreground,#94a3b8)] font-semibold mb-1">Time Horizon</label>
+          <select class="bg-[var(--background,#0b0f19)] border border-[var(--border,#1f2937)] text-[var(--foreground,#f8fafc)] text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+            <option>Trailing 12 Months (TTM)</option>
+            <option>FY2024 Full Year</option>
+            <option>Full Operating History (2018-2024)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB NAVIGATION -->
+    <nav class="flex border-b border-[var(--border,#1f2937)] mt-6 gap-6 text-sm overflow-x-auto">
+      <button onclick="switchTab('tab-overview')" id="btn-overview" class="tab-btn pb-3 text-sm font-medium tab-active transition-colors">1. Executive Overview</button>
+      <button onclick="switchTab('tab-attrition')" id="btn-attrition" class="tab-btn pb-3 text-sm font-medium text-[var(--muted-foreground,#94a3b8)] hover:text-[var(--foreground,#f8fafc)] transition-colors">2. Attrition Drivers & Flight Risk</button>
+      <button onclick="switchTab('tab-compensation')" id="btn-compensation" class="tab-btn pb-3 text-sm font-medium text-[var(--muted-foreground,#94a3b8)] hover:text-[var(--foreground,#f8fafc)] transition-colors">3. Compensation & Pay Equity</button>
+      <button onclick="switchTab('tab-velocity')" id="btn-velocity" class="tab-btn pb-3 text-sm font-medium text-[var(--muted-foreground,#94a3b8)] hover:text-[var(--foreground,#f8fafc)] transition-colors">4. Talent Velocity & ROI</button>
+    </nav>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 1: EXECUTIVE OVERVIEW -->
+  <!-- ========================================================================= -->
+  <main id="tab-overview" class="space-y-6">
+    <!-- TOP SCORECARDS -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Active Headcount</span>
+        <div id="cardHeadcount" class="text-2xl font-bold text-[var(--foreground,#f8fafc)] mt-1">872</div>
+        <div class="flex items-center gap-1 text-[11px] text-emerald-400 mt-1">
+          <span>↑ +4.2% YoY</span>
+          <span class="text-[var(--muted-foreground,#94a3b8)]">(Budget: 1,220)</span>
+        </div>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">TTM Attrition Rate</span>
+        <div id="cardTurnover" class="text-2xl font-bold text-blue-400 mt-1">13.2%</div>
+        <div class="text-[11px] text-emerald-400 mt-1">
+          <span>● Benchmark: 14.5%</span>
+        </div>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Total Annual Payroll</span>
+        <div id="cardPayroll" class="text-2xl font-bold text-[var(--foreground,#f8fafc)] mt-1">$88.45M</div>
+        <div class="text-[11px] text-[var(--muted-foreground,#94a3b8)] mt-1">
+          <span>Avg: $101,438 / emp</span>
+        </div>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Avg Compa-Ratio</span>
+        <div id="cardCompa" class="text-2xl font-bold text-amber-400 mt-1">0.992</div>
+        <div class="text-[11px] text-[var(--muted-foreground,#94a3b8)] mt-1">
+          <span>88% within target band</span>
+        </div>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm col-span-2 md:col-span-1">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Regretted Losses</span>
+        <div id="cardRegretted" class="text-2xl font-bold text-rose-500 mt-1">119</div>
+        <div class="text-[11px] text-rose-400 mt-1">
+          <span>39.1% of all voluntary exits</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Trailing 12 Month Headcount & Turnover Trend -->
+      <div class="lg:col-span-2 bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)]">Trailing 12-Month Headcount & Turnover Trend</h3>
+            <p class="text-xs text-[var(--muted-foreground,#94a3b8)]">Dual-axis view showing active workforce scale and annualized rolling turnover rate</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500"></span> Active Headcount</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-amber-400"></span> TTM Turnover %</span>
+          </div>
+        </div>
+
+        <!-- SVG CHART -->
+        <div class="w-full h-64">
+          <svg viewBox="0 0 650 200" class="w-full h-full">
+            <!-- Grid lines -->
+            <line x1="50" y1="30" x2="620" y2="30" stroke="currentColor" stroke-opacity="0.08" />
+            <line x1="50" y1="80" x2="620" y2="80" stroke="currentColor" stroke-opacity="0.08" />
+            <line x1="50" y1="130" x2="620" y2="130" stroke="currentColor" stroke-opacity="0.08" />
+            <line x1="50" y1="170" x2="620" y2="170" stroke="currentColor" stroke-opacity="0.2" />
+
+            <!-- Y-Axis labels (Headcount left) -->
+            <text x="40" y="35" text-anchor="end" class="text-[10px] fill-slate-400 font-mono">900</text>
+            <text x="40" y="85" text-anchor="end" class="text-[10px] fill-slate-400 font-mono">880</text>
+            <text x="40" y="135" text-anchor="end" class="text-[10px] fill-slate-400 font-mono">860</text>
+            <text x="40" y="170" text-anchor="end" class="text-[10px] fill-slate-400 font-mono">0</text>
+
+            <!-- Bars: Active Headcount -->
+            <!-- Jul --> <rect x="75" y="55" width="28" height="115" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+            <!-- Aug --> <rect x="125" y="60" width="28" height="110" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+            <!-- Sep --> <rect x="175" y="58" width="28" height="112" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+            <!-- Oct --> <rect x="225" y="58" width="28" height="112" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+            <!-- Nov --> <rect x="275" y="60" width="28" height="110" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+            <!-- Dec --> <rect x="325" y="62" width="28" height="108" rx="3" fill="#3b82f6" fill-opacity="0.85" />
+
+            <!-- Line: TTM Turnover Rate (12.67%, 12.88%, 13.55%, 13.09%, 13.09%, 13.22%) -->
+            <polyline fill="none" stroke="#f59e0b" stroke-width="3" points="
+              89,88
+              139,83
+              189,68
+              239,78
+              289,78
+              339,75
+            " />
+
+            <!-- Points on line -->
+            <circle cx="89" cy="88" r="4" fill="#f59e0b" />
+            <circle cx="139" cy="83" r="4" fill="#f59e0b" />
+            <circle cx="189" cy="68" r="4" fill="#f59e0b" />
+            <circle cx="239" cy="78" r="4" fill="#f59e0b" />
+            <circle cx="289" cy="78" r="4" fill="#f59e0b" />
+            <circle cx="339" cy="75" r="4" fill="#f59e0b" />
+
+            <!-- Value Labels on Points -->
+            <text x="89" y="78" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">12.7%</text>
+            <text x="139" y="73" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">12.9%</text>
+            <text x="189" y="58" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">13.6%</text>
+            <text x="239" y="68" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">13.1%</text>
+            <text x="289" y="68" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">13.1%</text>
+            <text x="339" y="65" text-anchor="middle" class="text-[10px] fill-amber-300 font-mono">13.2%</text>
+
+            <!-- X-Axis Months -->
+            <text x="89" y="188" text-anchor="middle" class="text-[11px] fill-slate-400">Jul 24</text>
+            <text x="139" y="188" text-anchor="middle" class="text-[11px] fill-slate-400">Aug 24</text>
+            <text x="189" y="188" text-anchor="middle" class="text-[11px] fill-slate-400">Sep 24</text>
+            <text x="239" y="188" text-anchor="middle" class="text-[11px] fill-slate-400">Oct 24</text>
+            <text x="289" y="188" text-anchor="middle" class="text-[11px] fill-slate-400">Nov 24</text>
+            <text x="339" y="188" text-anchor="middle" class="text-[11px] fill-slate-400 font-bold">Dec 24</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Department Headcount vs Budget Target -->
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)] mb-1">Headcount vs Approved Budget</h3>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mb-4">Staffing levels against board target caps</p>
+
+        <div class="space-y-3.5 text-xs">
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Engineering (338 / 420)</span>
+              <span class="text-slate-400">80.5% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" style="width: 80.5%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Sales (177 / 240)</span>
+              <span class="text-slate-400">73.8% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" style="width: 73.8%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Customer Support (98 / 180)</span>
+              <span class="text-rose-400 font-semibold">54.4% (Severe Gap)</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-rose-500 h-2 rounded-full" style="width: 54.4%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Product & Design (82 / 130)</span>
+              <span class="text-slate-400">63.1% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" style="width: 63.1%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Marketing (78 / 120)</span>
+              <span class="text-slate-400">65.0% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" style="width: 65.0%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Finance & Legal (54 / 70)</span>
+              <span class="text-emerald-400">77.1% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-emerald-500 h-2 rounded-full" style="width: 77.1%"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <span class="font-medium">Human Resources (45 / 60)</span>
+              <span class="text-emerald-400">75.0% filled</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2">
+              <div class="bg-emerald-500 h-2 rounded-full" style="width: 75.0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE: DEPARTMENT WORKFORCE SCORECARD -->
+    <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm overflow-x-auto">
+      <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)] mb-1">Department Workforce Scorecard</h3>
+      <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mb-4">Consolidated operational metrics from database view <code class="text-blue-400 font-mono">vw_executive_workforce_kpis</code></p>
+
+      <table class="w-full text-xs text-left border-collapse">
+        <thead class="bg-slate-800/50 text-[var(--muted-foreground,#94a3b8)] border-b border-[var(--border,#1f2937)]">
+          <tr>
+            <th class="p-3 font-semibold">Department</th>
+            <th class="p-3 font-semibold text-right">Active Staff</th>
+            <th class="p-3 font-semibold text-right">Budget Target</th>
+            <th class="p-3 font-semibold text-right">Cumulative Exits</th>
+            <th class="p-3 font-semibold text-right">Turnover %</th>
+            <th class="p-3 font-semibold text-right">Avg Base Salary</th>
+            <th class="p-3 font-semibold text-right">Avg Compa</th>
+            <th class="p-3 font-semibold text-right">Avg Satisfaction</th>
+            <th class="p-3 font-semibold text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border,#1f2937)]">
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Engineering</td>
+            <td class="p-3 text-right font-mono">338</td>
+            <td class="p-3 text-right font-mono text-slate-400">420</td>
+            <td class="p-3 text-right font-mono text-rose-400">100</td>
+            <td class="p-3 text-right font-mono">22.8%</td>
+            <td class="p-3 text-right font-mono">$130,926</td>
+            <td class="p-3 text-right font-mono">1.01</td>
+            <td class="p-3 text-right font-mono">3.97 / 5</td>
+            <td class="p-3 text-center"><span class="badge-healthy px-2 py-0.5 rounded text-[11px]">Stable</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Sales</td>
+            <td class="p-3 text-right font-mono">177</td>
+            <td class="p-3 text-right font-mono text-slate-400">240</td>
+            <td class="p-3 text-right font-mono text-rose-400">105</td>
+            <td class="p-3 text-right font-mono text-amber-400">37.2%</td>
+            <td class="p-3 text-right font-mono">$85,954</td>
+            <td class="p-3 text-right font-mono">0.99</td>
+            <td class="p-3 text-right font-mono">3.60 / 5</td>
+            <td class="p-3 text-center"><span class="badge-high px-2 py-0.5 rounded text-[11px]">High Churn</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 font-medium text-rose-300">Customer Support</td>
+            <td class="p-3 text-right font-mono font-bold text-rose-300">98</td>
+            <td class="p-3 text-right font-mono text-slate-400">180</td>
+            <td class="p-3 text-right font-mono text-rose-400 font-bold">96</td>
+            <td class="p-3 text-right font-mono font-bold text-rose-400">49.5%</td>
+            <td class="p-3 text-right font-mono">$53,516</td>
+            <td class="p-3 text-right font-mono">0.94</td>
+            <td class="p-3 text-right font-mono font-bold text-rose-400">3.14 / 5</td>
+            <td class="p-3 text-center"><span class="badge-critical px-2 py-0.5 rounded text-[11px]">Critical</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Product & Design</td>
+            <td class="p-3 text-right font-mono">82</td>
+            <td class="p-3 text-right font-mono text-slate-400">130</td>
+            <td class="p-3 text-right font-mono text-rose-400">30</td>
+            <td class="p-3 text-right font-mono">26.8%</td>
+            <td class="p-3 text-right font-mono">$110,107</td>
+            <td class="p-3 text-right font-mono">0.98</td>
+            <td class="p-3 text-right font-mono">4.08 / 5</td>
+            <td class="p-3 text-center"><span class="badge-moderate px-2 py-0.5 rounded text-[11px]">Moderate</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Marketing</td>
+            <td class="p-3 text-right font-mono">78</td>
+            <td class="p-3 text-right font-mono text-slate-400">120</td>
+            <td class="p-3 text-right font-mono text-rose-400">34</td>
+            <td class="p-3 text-right font-mono">30.4%</td>
+            <td class="p-3 text-right font-mono">$81,612</td>
+            <td class="p-3 text-right font-mono">0.99</td>
+            <td class="p-3 text-right font-mono">4.12 / 5</td>
+            <td class="p-3 text-center"><span class="badge-moderate px-2 py-0.5 rounded text-[11px]">Moderate</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Finance & Legal</td>
+            <td class="p-3 text-right font-mono">54</td>
+            <td class="p-3 text-right font-mono text-slate-400">70</td>
+            <td class="p-3 text-right font-mono text-emerald-400">6</td>
+            <td class="p-3 text-right font-mono text-emerald-400">10.0%</td>
+            <td class="p-3 text-right font-mono">$95,800</td>
+            <td class="p-3 text-right font-mono">1.00</td>
+            <td class="p-3 text-right font-mono">4.20 / 5</td>
+            <td class="p-3 text-center"><span class="badge-healthy px-2 py-0.5 rounded text-[11px]">Optimal</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-medium text-[var(--foreground,#f8fafc)]">Human Resources</td>
+            <td class="p-3 text-right font-mono">45</td>
+            <td class="p-3 text-right font-mono text-slate-400">60</td>
+            <td class="p-3 text-right font-mono text-emerald-400">7</td>
+            <td class="p-3 text-right font-mono text-emerald-400">13.5%</td>
+            <td class="p-3 text-right font-mono">$79,096</td>
+            <td class="p-3 text-right font-mono">1.02</td>
+            <td class="p-3 text-right font-mono">4.44 / 5</td>
+            <td class="p-3 text-center"><span class="badge-healthy px-2 py-0.5 rounded text-[11px]">Optimal</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: ATTRITION DRIVERS & FLIGHT RISK -->
+  <!-- ========================================================================= -->
+  <main id="tab-attrition" class="space-y-6 hidden">
+    <!-- ATTRITION ROOT CAUSE CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Factor 1: Compa-Ratio -->
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-rose-400">Driver #1</span>
+          <span class="badge-critical px-2 py-0.5 rounded text-[10px]">2.2x Hazard</span>
+        </div>
+        <h4 class="font-bold text-base text-[var(--foreground,#f8fafc)]">Underpaid Compa-Ratio (&lt;0.85)</h4>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mt-1 mb-4">
+          Employees paid below 85% of market band midpoint leave at <strong class="text-rose-400 font-mono">41.8% voluntary turnover</strong> vs 20.0% at market midpoint.
+        </p>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-slate-300">
+            <span>&lt; 0.85 Compa (110 staff)</span>
+            <span class="font-mono text-rose-400 font-bold">41.8%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-rose-500 h-2 rounded-full" style="width: 41.8%"></div>
+          </div>
+          <div class="flex justify-between text-slate-300 pt-1">
+            <span>0.95 - 1.05 Target Midpoint</span>
+            <span class="font-mono text-emerald-400 font-bold">20.0%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-emerald-500 h-2 rounded-full" style="width: 20%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Factor 2: Overtime Burnout -->
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-rose-400">Driver #2</span>
+          <span class="badge-critical px-2 py-0.5 rounded text-[10px]">2.5x Hazard</span>
+        </div>
+        <h4 class="font-bold text-base text-[var(--foreground,#f8fafc)]">Extreme Overtime (&gt;25 hrs/mo)</h4>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mt-1 mb-4">
+          Crossing 25 monthly overtime hours causes turnover to explode to <strong class="text-rose-400 font-mono">61.7%</strong> and sentiment crashes to 1.9 / 5.0.
+        </p>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-slate-300">
+            <span>&gt; 25 Hours (94 staff)</span>
+            <span class="font-mono text-rose-400 font-bold">61.7%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-rose-500 h-2 rounded-full" style="width: 61.7%"></div>
+          </div>
+          <div class="flex justify-between text-slate-300 pt-1">
+            <span>0 - 15 Hours (921 staff)</span>
+            <span class="font-mono text-blue-400 font-bold">25.1%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-blue-500 h-2 rounded-full" style="width: 25.1%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Factor 3: Mid-Tenure Stagnation -->
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Driver #3</span>
+          <span class="badge-high px-2 py-0.5 rounded text-[10px]">Tenure Trap</span>
+        </div>
+        <h4 class="font-bold text-base text-[var(--foreground,#f8fafc)]">Year 2-3 Promotion Stagnation</h4>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mt-1 mb-4">
+          High performers (Ratings 4-5) leave between <strong class="text-amber-400 font-mono">2.2 and 2.4 years</strong> of tenure when career advancement stalls.
+        </p>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between text-slate-300">
+            <span>Sales Regretted Losses</span>
+            <span class="font-mono text-rose-400 font-bold">50.5%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-rose-500 h-2 rounded-full" style="width: 50.5%"></div>
+          </div>
+          <div class="flex justify-between text-slate-300 pt-1">
+            <span>Product Regretted Losses</span>
+            <span class="font-mono text-amber-400 font-bold">44.4%</span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2">
+            <div class="bg-amber-500 h-2 rounded-full" style="width: 44.4%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EARLY WARNING FLIGHT RISK WATCHLIST TABLE -->
+    <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm overflow-x-auto">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)]">Active Flight-Risk Early Warning Watchlist</h3>
+          <p class="text-xs text-[var(--muted-foreground,#94a3b8)]">Employees flagged by predictive composite scoring: Compa (&lt;0.88) + Overtime (&gt;15 hrs) + Low Sentiment (Score &le;2)</p>
+        </div>
+        <span class="px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 text-xs font-semibold rounded-lg">
+          20 Critical Interventions Needed
+        </span>
+      </div>
+
+      <table class="w-full text-xs text-left border-collapse">
+        <thead class="bg-slate-800/50 text-[var(--muted-foreground,#94a3b8)] border-b border-[var(--border,#1f2937)]">
+          <tr>
+            <th class="p-3 font-semibold">Employee ID</th>
+            <th class="p-3 font-semibold">Employee Name</th>
+            <th class="p-3 font-semibold">Department</th>
+            <th class="p-3 font-semibold">Role & Level</th>
+            <th class="p-3 font-semibold text-right">Compa-Ratio</th>
+            <th class="p-3 font-semibold text-right">OT Hours/Mo</th>
+            <th class="p-3 font-semibold text-center">Satisfaction</th>
+            <th class="p-3 font-semibold text-right">Tenure</th>
+            <th class="p-3 font-semibold text-center">Risk Index</th>
+            <th class="p-3 font-semibold text-center">Intervention Priority</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border,#1f2937)] font-mono">
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 text-slate-400">#1186</td>
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Michael Roberts</td>
+            <td class="p-3 font-sans">Customer Support</td>
+            <td class="p-3 font-sans">Support Specialist (L1)</td>
+            <td class="p-3 text-right text-rose-400 font-bold">0.840</td>
+            <td class="p-3 text-right text-rose-400 font-bold">40 hrs</td>
+            <td class="p-3 text-center text-rose-400 font-bold">1 / 5</td>
+            <td class="p-3 text-right text-slate-300">0.1 yrs</td>
+            <td class="p-3 text-center"><span class="badge-critical px-2 py-0.5 rounded font-bold">90 / 100</span></td>
+            <td class="p-3 text-center font-sans"><span class="text-rose-400 font-bold">Immediate Review</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 text-slate-400">#1554</td>
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Isabella Garcia</td>
+            <td class="p-3 font-sans">Customer Support</td>
+            <td class="p-3 font-sans">Senior Support Specialist (L2)</td>
+            <td class="p-3 text-right text-rose-400 font-bold">0.833</td>
+            <td class="p-3 text-right text-rose-400 font-bold">22 hrs</td>
+            <td class="p-3 text-center text-rose-400 font-bold">2 / 5</td>
+            <td class="p-3 text-right text-slate-300">6.4 yrs</td>
+            <td class="p-3 text-center"><span class="badge-critical px-2 py-0.5 rounded font-bold">88 / 100</span></td>
+            <td class="p-3 text-center font-sans"><span class="text-rose-400 font-bold">Immediate Review</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 text-slate-400">#1142</td>
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Ella Baker</td>
+            <td class="p-3 font-sans">Engineering</td>
+            <td class="p-3 font-sans">Senior Software Engineer (L3)</td>
+            <td class="p-3 text-right text-amber-400 font-bold">0.871</td>
+            <td class="p-3 text-right text-rose-400 font-bold">30 hrs</td>
+            <td class="p-3 text-center text-rose-400 font-bold">2 / 5</td>
+            <td class="p-3 text-right text-slate-300">3.2 yrs</td>
+            <td class="p-3 text-center"><span class="badge-critical px-2 py-0.5 rounded font-bold">85 / 100</span></td>
+            <td class="p-3 text-center font-sans"><span class="text-rose-400 font-bold">Equity Catch-up</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 text-slate-400">#1390</td>
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Liam Wilson</td>
+            <td class="p-3 font-sans">Sales</td>
+            <td class="p-3 font-sans">Account Executive (L2)</td>
+            <td class="p-3 text-right text-amber-400">0.865</td>
+            <td class="p-3 text-right text-amber-400">25 hrs</td>
+            <td class="p-3 text-center text-amber-400">2 / 5</td>
+            <td class="p-3 text-right text-slate-300">2.6 yrs</td>
+            <td class="p-3 text-center"><span class="badge-high px-2 py-0.5 rounded font-bold">78 / 100</span></td>
+            <td class="p-3 text-center font-sans"><span class="text-amber-400">Quota Review</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 text-slate-400">#1205</td>
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Sophia Martinez</td>
+            <td class="p-3 font-sans">Product & Design</td>
+            <td class="p-3 font-sans">Product Designer (L2)</td>
+            <td class="p-3 text-right text-amber-400">0.875</td>
+            <td class="p-3 text-right text-slate-400">10 hrs</td>
+            <td class="p-3 text-center text-rose-400">2 / 5</td>
+            <td class="p-3 text-right text-slate-300">3.1 yrs</td>
+            <td class="p-3 text-center"><span class="badge-high px-2 py-0.5 rounded font-bold">67 / 100</span></td>
+            <td class="p-3 text-center font-sans"><span class="text-blue-400">Promotion Track</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 3: COMPENSATION & PAY EQUITY -->
+  <!-- ========================================================================= -->
+  <main id="tab-compensation" class="space-y-6 hidden">
+    <!-- COMPENSATION CARDS -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Average Base Salary</span>
+        <div class="text-2xl font-bold text-[var(--foreground,#f8fafc)] mt-1">$101,438</div>
+        <span class="text-[11px] text-slate-400">Range: $42k - $475k</span>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Median Base Salary</span>
+        <div class="text-2xl font-bold text-blue-400 mt-1">$96,500</div>
+        <span class="text-[11px] text-slate-400">Resilient against exec skew</span>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Underpaid Population</span>
+        <div class="text-2xl font-bold text-rose-400 mt-1">110 Incumbents</div>
+        <span class="text-[11px] text-rose-400 font-semibold">12.6% below 0.85 compa</span>
+      </div>
+
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-4 shadow-sm">
+        <span class="text-xs text-[var(--muted-foreground,#94a3b8)] font-medium">Adjusted Pay Gap</span>
+        <div class="text-2xl font-bold text-emerald-400 mt-1">-1.2%</div>
+        <span class="text-[11px] text-emerald-400 font-semibold">Within parity tolerance</span>
+      </div>
+    </div>
+
+    <!-- SALARY COMPRESSION & INVERSION AUDIT -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)]">Salary Inversion Detected (New &gt; Tenured)</h3>
+          <span class="badge-critical px-2 py-0.5 rounded text-[10px]">Market Lag</span>
+        </div>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mb-4">
+          Roles where recent hires (&le;1.5 yrs tenure) earn higher average salaries than 3+ year tenured veterans due to market hiring inflation outstripping internal merit increases.
+        </p>
+
+        <div class="space-y-4 text-xs">
+          <div class="bg-slate-800/40 p-3.5 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-200">Senior Enterprise AE (Sales)</span>
+              <span class="font-mono text-rose-400 font-bold">+$2,784 Inversion Gap</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px] font-mono">
+              <span>Recent Hires (&le;1.5y): $133,417</span>
+              <span>Tenured (&ge;3y): $130,633</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-800/40 p-3.5 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-200">Senior Support Specialist (Support)</span>
+              <span class="font-mono text-rose-400 font-bold">+$2,611 Inversion Gap</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px] font-mono">
+              <span>Recent Hires (&le;1.5y): $65,444</span>
+              <span>Tenured (&ge;3y): $62,833</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-800/40 p-3.5 rounded-lg border border-slate-800">
+            <div class="flex justify-between items-center mb-1">
+              <span class="font-semibold text-slate-200">Account Executive (Sales)</span>
+              <span class="font-mono text-rose-400 font-bold">+$1,281 Inversion Gap</span>
+            </div>
+            <div class="flex justify-between text-slate-400 text-[11px] font-mono">
+              <span>Recent Hires (&le;1.5y): $94,435</span>
+              <span>Tenured (&ge;3y): $93,154</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GENDER PAY EQUITY ACROSS TIERS -->
+      <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm">
+        <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)] mb-1">Gender Pay Equity & Pipeline Representation</h3>
+        <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mb-4">Unadjusted vs level-adjusted compa-ratio differentials</p>
+
+        <table class="w-full text-xs text-left border-collapse">
+          <thead class="bg-slate-800/50 text-[var(--muted-foreground,#94a3b8)] border-b border-[var(--border,#1f2937)] font-mono">
+            <tr>
+              <th class="p-2.5">Level Tier</th>
+              <th class="p-2.5 text-right">Female Count</th>
+              <th class="p-2.5 text-right">Male Count</th>
+              <th class="p-2.5 text-right">Female Compa</th>
+              <th class="p-2.5 text-right">Male Compa</th>
+              <th class="p-2.5 text-center">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border,#1f2937)] font-mono text-[11px]">
+            <tr>
+              <td class="p-2.5 font-bold font-sans">L1 (Entry)</td>
+              <td class="p-2.5 text-right">161</td>
+              <td class="p-2.5 text-right">130</td>
+              <td class="p-2.5 text-right">0.998</td>
+              <td class="p-2.5 text-right">0.990</td>
+              <td class="p-2.5 text-center font-sans"><span class="badge-healthy px-1.5 py-0.5 rounded">Parity</span></td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold font-sans">L2 (Associate)</td>
+              <td class="p-2.5 text-right">172</td>
+              <td class="p-2.5 text-right">144</td>
+              <td class="p-2.5 text-right">0.994</td>
+              <td class="p-2.5 text-right">0.989</td>
+              <td class="p-2.5 text-center font-sans"><span class="badge-healthy px-1.5 py-0.5 rounded">Parity</span></td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold font-sans">L3 (Senior)</td>
+              <td class="p-2.5 text-right">83</td>
+              <td class="p-2.5 text-right">76</td>
+              <td class="p-2.5 text-right">0.987</td>
+              <td class="p-2.5 text-right">1.005</td>
+              <td class="p-2.5 text-center font-sans"><span class="badge-healthy px-1.5 py-0.5 rounded">-1.8% Gap</span></td>
+            </tr>
+            <tr>
+              <td class="p-2.5 font-bold font-sans">L4 (Staff)</td>
+              <td class="p-2.5 text-right">17</td>
+              <td class="p-2.5 text-right">18</td>
+              <td class="p-2.5 text-right">0.982</td>
+              <td class="p-2.5 text-right">1.031</td>
+              <td class="p-2.5 text-center font-sans"><span class="badge-moderate px-1.5 py-0.5 rounded">-4.9% Gap</span></td>
+            </tr>
+            <tr class="bg-amber-500/5">
+              <td class="p-2.5 font-bold font-sans text-amber-300">M1 (Manager)</td>
+              <td class="p-2.5 text-right text-amber-300">3</td>
+              <td class="p-2.5 text-right text-amber-300">8</td>
+              <td class="p-2.5 text-right">0.965</td>
+              <td class="p-2.5 text-right">0.996</td>
+              <td class="p-2.5 text-center font-sans"><span class="badge-high px-1.5 py-0.5 rounded">Leadership Gap</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 4: TALENT VELOCITY & ROI -->
+  <!-- ========================================================================= -->
+  <main id="tab-velocity" class="space-y-6 hidden">
+    <!-- FINANCIAL ROI HERO CARD -->
+    <div class="bg-gradient-to-r from-blue-950/60 to-slate-900 border border-blue-800/40 rounded-2xl p-6 shadow-md">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-blue-400">Financial Business Case</span>
+          <h2 class="text-xl md:text-2xl font-bold text-white mt-1">FY2025 Retention Roadmap: $1.85M Annual Cost Avoidance</h2>
+          <p class="text-xs md:text-sm text-slate-300 mt-1 max-w-2xl">
+            A targeted $850k investment in compa-ratio corrections, overtime caps, and manager restructuring reduces voluntary turnover by 20%, generating a <strong class="text-emerald-400 font-bold">117.6% 1-Year Net ROI</strong>.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs text-slate-400">Net Operational Return</span>
+            <div class="text-2xl font-bold text-emerald-400">+$1,000,000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 PILLARS ROADMAP GRID -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-blue-900/40 text-xs">
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between text-blue-400 font-bold mb-1">
+            <span>Pillar 1</span>
+            <span>$520,000</span>
+          </div>
+          <h5 class="font-bold text-white text-sm">Market Equity Adjustments</h5>
+          <p class="text-slate-400 mt-1 text-[11px]">
+            Target 110 active staff with compa-ratio &lt;0.88; eliminate $2.8k salary inversion in Sales and Support.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between text-blue-400 font-bold mb-1">
+            <span>Pillar 2</span>
+            <span>$180,000</span>
+          </div>
+          <h5 class="font-bold text-white text-sm">20-Hour Overtime Ceiling</h5>
+          <p class="text-slate-400 mt-1 text-[11px]">
+            Automated alerts in BI; mandatory task redistribution when overtime exceeds 20 hrs to prevent the 61.7% burnout cliff.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between text-blue-400 font-bold mb-1">
+            <span>Pillar 3</span>
+            <span>$90,000</span>
+          </div>
+          <h5 class="font-bold text-white text-sm">Span of Control Restructuring</h5>
+          <p class="text-slate-400 mt-1 text-[11px]">
+            Cap direct reports at &le;12 by promoting Team Leads in Customer Support (where managers currently carry 48+ reports).
+          </p>
+        </div>
+
+        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between text-blue-400 font-bold mb-1">
+            <span>Pillar 4</span>
+            <span>$60,000</span>
+          </div>
+          <h5 class="font-bold text-white text-sm">Accelerated Promotion Tracks</h5>
+          <p class="text-slate-400 mt-1 text-[11px]">
+            Fast-track promotion cycles for staff with 2 consecutive ratings &ge;4 reaching 18-24 months of tenure.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPAN OF CONTROL & MANAGER PERFORMANCE -->
+    <div class="bg-[var(--card,#111827)] border border-[var(--border,#1f2937)] rounded-xl p-5 shadow-sm overflow-x-auto">
+      <h3 class="font-semibold text-base text-[var(--foreground,#f8fafc)] mb-1">Manager Span of Control & Team Attrition Impact</h3>
+      <p class="text-xs text-[var(--muted-foreground,#94a3b8)] mb-4">Demonstrating how excessive management load correlates directly with team turnover</p>
+
+      <table class="w-full text-xs text-left border-collapse">
+        <thead class="bg-slate-800/50 text-[var(--muted-foreground,#94a3b8)] border-b border-[var(--border,#1f2937)] font-mono">
+          <tr>
+            <th class="p-3">Manager Name</th>
+            <th class="p-3">Department</th>
+            <th class="p-3 text-right">Active Direct Reports</th>
+            <th class="p-3 text-right">Cumulative Exits</th>
+            <th class="p-3 text-right">Team Turnover %</th>
+            <th class="p-3 text-center">Team Satisfaction</th>
+            <th class="p-3 text-center">Span Classification</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[var(--border,#1f2937)] font-mono text-[11px]">
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Terrence Brooks</td>
+            <td class="p-3 font-sans">Customer Support</td>
+            <td class="p-3 text-right font-bold text-rose-400">48</td>
+            <td class="p-3 text-right text-rose-400">49</td>
+            <td class="p-3 text-right font-bold text-rose-400">50.5%</td>
+            <td class="p-3 text-center text-rose-400 font-bold">3.16 / 5</td>
+            <td class="p-3 text-center font-sans"><span class="badge-critical px-2 py-0.5 rounded">High Span (48 Reports)</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25 bg-rose-500/5">
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Brian Williams</td>
+            <td class="p-3 font-sans">Customer Support</td>
+            <td class="p-3 text-right font-bold text-rose-400">50</td>
+            <td class="p-3 text-right text-rose-400">47</td>
+            <td class="p-3 text-right font-bold text-rose-400">48.5%</td>
+            <td class="p-3 text-center text-rose-400 font-bold">3.12 / 5</td>
+            <td class="p-3 text-center font-sans"><span class="badge-critical px-2 py-0.5 rounded">High Span (50 Reports)</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Sarah Jenkins</td>
+            <td class="p-3 font-sans">Sales</td>
+            <td class="p-3 text-right">59</td>
+            <td class="p-3 text-right text-amber-400">35</td>
+            <td class="p-3 text-right text-amber-400 font-bold">37.2%</td>
+            <td class="p-3 text-center">3.59 / 5</td>
+            <td class="p-3 text-center font-sans"><span class="badge-high px-2 py-0.5 rounded">High Span (59 Reports)</span></td>
+          </tr>
+          <tr class="hover:bg-slate-800/25">
+            <td class="p-3 font-sans font-medium text-[var(--foreground,#f8fafc)]">Priya Patel</td>
+            <td class="p-3 font-sans">Engineering</td>
+            <td class="p-3 text-right">68</td>
+            <td class="p-3 text-right text-emerald-400">20</td>
+            <td class="p-3 text-right text-emerald-400 font-bold">22.7%</td>
+            <td class="p-3 text-center text-emerald-400">4.02 / 5</td>
+            <td class="p-3 text-center font-sans"><span class="badge-moderate px-2 py-0.5 rounded">Technical Lead Model</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    function switchTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('main').forEach(m => m.classList.add('hidden'));
+      // Remove active styling from buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-[var(--muted-foreground,#94a3b8)]');
+      });
+
+      // Show selected tab
+      document.getElementById(tabId).classList.remove('hidden');
+      const btnId = tabId.replace('tab-', 'btn-');
+      const activeBtn = document.getElementById(btnId);
+      if (activeBtn) {
+        activeBtn.classList.add('tab-active');
+        activeBtn.classList.remove('text-[var(--muted-foreground,#94a3b8)]');
+      }
+    }
+
+    const deptData = {
+      "All": { hc: 872, turnover: "13.2%", payroll: "$88.45M", compa: "0.992", regretted: 119 },
+      "Engineering": { hc: 338, turnover: "11.4%", payroll: "$44.25M", compa: "1.012", regretted: 37 },
+      "Sales": { hc: 177, turnover: "18.6%", payroll: "$15.21M", compa: "0.991", regretted: 48 },
+      "Customer Support": { hc: 98, turnover: "24.5%", payroll: "$5.24M", compa: "0.942", regretted: 29 },
+      "Product & Design": { hc: 82, turnover: "14.2%", payroll: "$9.03M", compa: "0.983", regretted: 12 },
+      "Marketing": { hc: 78, turnover: "12.8%", payroll: "$6.37M", compa: "0.994", regretted: 15 },
+      "Finance & Legal": { hc: 54, turnover: "5.5%", payroll: "$5.17M", compa: "1.002", regretted: 2 },
+      "Human Resources": { hc: 45, turnover: "6.7%", payroll: "$3.56M", compa: "1.021", regretted: 1 }
+    };
+
+    function applyFilters() {
+      const selected = document.getElementById('deptFilter').value;
+      const d = deptData[selected] || deptData["All"];
+      document.getElementById('cardHeadcount').innerText = d.hc;
+      document.getElementById('cardTurnover').innerText = d.turnover;
+      document.getElementById('cardPayroll').innerText = d.payroll;
+      document.getElementById('cardCompa').innerText = d.compa;
+      document.getElementById('cardRegretted').innerText = d.regretted;
+    }
+  
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const targetTab = hash.substring(1);
+        if (document.getElementById(targetTab)) {
+          switchTab(targetTab);
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
