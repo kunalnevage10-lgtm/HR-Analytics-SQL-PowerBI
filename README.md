@@ -316,6 +316,3 @@ For STAR / XYZ format resume bullet points, interview answers regarding `USERELA
 
 ---
 
-## Author & License
-- **Author**: Antigravity Pair Programming & Advanced People Analytics Team
-- **License**: MIT Open Source License
