@@ -24,21 +24,21 @@ flowchart TD
         F_REV["Fact_Performance_Reviews<br/>(Annual Review Grain)"]
     end
 
-    D_DEPT -->|1 : Many| F_SNAP
-    D_JOB -->|1 : Many| F_SNAP
-    D_LOC -->|1 : Many| F_SNAP
-    D_EMP -->|1 : Many| F_SNAP
-    D_DATE -->|1 : Many (Active: SnapshotDate)| F_SNAP
+    D_DEPT -->|"1 : Many"| F_SNAP
+    D_JOB -->|"1 : Many"| F_SNAP
+    D_LOC -->|"1 : Many"| F_SNAP
+    D_EMP -->|"1 : Many"| F_SNAP
+    D_DATE -->|"1 : Many - Active: SnapshotDate"| F_SNAP
 
-    D_DEPT -->|1 : Many| F_ATTR
-    D_JOB -->|1 : Many| F_ATTR
-    D_LOC -->|1 : Many| F_ATTR
-    D_EMP -->|1 : Many| F_ATTR
-    D_DATE -.->|1 : Many (Inactive: ExitDate)| F_ATTR
-    D_DATE -.->|1 : Many (Inactive: HireDate)| F_ATTR
+    D_DEPT -->|"1 : Many"| F_ATTR
+    D_JOB -->|"1 : Many"| F_ATTR
+    D_LOC -->|"1 : Many"| F_ATTR
+    D_EMP -->|"1 : Many"| F_ATTR
+    D_DATE -.->|"1 : Many - Inactive: ExitDate"| F_ATTR
+    D_DATE -.->|"1 : Many - Inactive: HireDate"| F_ATTR
 
-    D_EMP -->|1 : Many| F_REV
-    D_DATE -->|1 : Many (Active: ReviewDate)| F_REV
+    D_EMP -->|"1 : Many"| F_REV
+    D_DATE -->|"1 : Many - Active: ReviewDate"| F_REV
 ```
 
 ---

@@ -14,7 +14,7 @@ erDiagram
     DEPARTMENTS ||--o{ JOB_ROLES : "defines"
     LOCATIONS ||--o{ EMPLOYEES : "stations"
     JOB_ROLES ||--o{ EMPLOYEES : "classifies"
-    EMPLOYEES ||--o{ EMPLOYEES : "manages (self-referential)"
+    EMPLOYEES ||--o{ EMPLOYEES : "manages"
     EMPLOYEES ||--o{ PERFORMANCE_REVIEWS : "receives"
     EMPLOYEES ||--o{ SALARY_HISTORY : "tracks"
 ```

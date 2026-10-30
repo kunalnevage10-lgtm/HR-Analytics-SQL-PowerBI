@@ -148,9 +148,9 @@ flowchart TD
         F_REV["Fact_Performance_Reviews<br/>(Annual Performance Ratings)"]
     end
 
-    D_DATE -->|Active: SnapshotDate| F_SNAP
-    D_DATE -.->|Inactive: ExitDate (USERELATIONSHIP)| F_ATTR
-    D_DATE -.->|Inactive: HireDate| F_ATTR
+    D_DATE -->|"Active: SnapshotDate"| F_SNAP
+    D_DATE -.->|"Inactive: ExitDate"| F_ATTR
+    D_DATE -.->|"Inactive: HireDate"| F_ATTR
     D_EMP --> F_SNAP
     D_EMP --> F_ATTR
     D_DEPT --> F_SNAP
